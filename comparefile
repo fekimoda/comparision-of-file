@@ -1,0 +1,59 @@
+import netmiko
+import getpass
+from netmiko import ConnectHandler
+from difflib import Differ
+import difflib
+
+connectioninfo = {
+    "device_type": "cisco_ios",
+    "host": "192.168.56.101",
+    "username" : "cisco",
+    "password": "cisco123!",
+    "secret": "class123!"
+}
+
+print("Device Menu")
+connectioninfo['username'] = input("Input Device username: ")
+connectioninfo['password'] = getpass.getpass("Device password: ")
+connectioninfo['secret'] = getpass.getpass("Device Secret: ")
+choice = input("FILE COMPARISON (1) or OFFLINE COMPARISON (2): ")
+
+if choice == "1":
+    session = netmiko.ConnectHandler(**connectioninfo)
+    session.enable()
+    
+    running_config = session.send_command("show running-config")
+    startup_config = session.send_command("show startup-config")
+    
+    file = open("runcode.txt", "w")
+    file.write(running_config)
+    file.close()
+
+    file2 = open("strtcode.txt", "w")
+    file2.write(startup_config)
+    file2.close()
+
+    runcode = open("runcode.txt", "r")
+
+    startcode = open("strtcode.txt", "r")
+
+    comp = difflib.unified_diff(runcode.readlines(), startcode.readlines())
+
+    for diff in comp:
+        print(diff)
+        
+    
+    elif choice == "2":
+     session = netmiko.ConnectHandler(**connectioninfo)
+     session.enable()
+    
+     file = open("running-conf.txt", "r").readlines()
+     file1 = open("backupfile.txt", "r").readlines()
+    
+     offcomp = difflib.unified_diff(file, file1)
+     for diff in offcomp:
+         print(diff)
+
+else:
+    print("Menu Unavailable")
+    exit()
